@@ -5,13 +5,13 @@ const app = express();
 
 const {GraphQLSchema, GraphQLObjectType, GraphQLList, GraphQLInt, GraphQLNonNull, GraphQLString} = require("graphql");
 
-const authors = [
+let authors = [
     {id: 1, name: 'J.K.Rowling'},
     {id: 2, name: 'J.R.R.Tolkien'},
     {id: 3, name: 'Brent Weeks'}
 ]
 
-const books = [
+let books = [
     {id: 1, name: 'Harry Potter and the chamber of secrets', authorId: 1},
     {id: 2, name: 'Harry Potter and the prizoner of Azkaban', authorId: 1},
     {id: 3, name: 'Harry Potter and the goblet of fire', authorId: 1},
@@ -116,7 +116,65 @@ const RootMutationType = new GraphQLObjectType({
                 authors.push(author)
                 return author
             }
-        }        
+        } ,
+        updateBook: {
+            type: BookType,
+            description: 'Update a book',
+            args: {
+                name: {type: GraphQLString},
+                authorId: {type: GraphQLInt},
+                id: {type: GraphQLNonNull(GraphQLInt)}
+            },
+            resolve: (parent, args) => {
+                const book= {id: args.id, name: args.name, authorId: args.authorId}
+                books.map(item => {
+                    if (item.id === book.id) {
+                        item.name = book.name ?? item.name;
+                        item.authorId = book.authorId ?? item.authorId;
+                    }
+                })
+                return book
+            }
+        },
+        updateAuthor: {
+            type: AuthorType,
+            description: 'Update an author',
+            args: {
+                name: {type: GraphQLNonNull(GraphQLString)},
+                id: {type: GraphQLNonNull(GraphQLInt)}                
+            },
+            resolve: (parent, args) => {
+                const author= {id: args.id, name: args.name}
+                authors.map(item => {
+                    if (item.id === author.id) {
+                        item.name = author.name;
+                    }
+                })
+                return author
+            }
+        },
+        deleteBook: {
+            type: GraphQLList(BookType),
+            description: 'Delete a book',
+            args: {
+                id: {type: GraphQLNonNull(GraphQLInt)}
+            },
+            resolve: (parent, args) => {
+                books = books.filter(item => item.id !== args.id);
+                return books
+            }
+        },
+        deleteAuthor: {
+            type: GraphQLList(AuthorType),
+            description: 'Delete an author',
+            args: {
+                id: {type: GraphQLNonNull(GraphQLInt)}                
+            },
+            resolve: (parent, args) => {
+                authors = authors.filter(item => item.id !== args.id);
+                return authors
+            }
+        }                        
     })
 })
 
